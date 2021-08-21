@@ -86,7 +86,7 @@ def _generate_new_position(x0: list = None, dof: int = None, bounds: list = None
 
 
 def minimize(func, x0=None, dof=None, bounds=None, pp=0.6, cr=0.44, pm=0.4, npop=10, disp=False, maxiter=50, rmax=2,
-             rmin=1.5, dynamic=False):
+             rmin=1.5):
     '''
     Parameters
     ----------
@@ -138,7 +138,7 @@ def minimize(func, x0=None, dof=None, bounds=None, pp=0.6, cr=0.44, pm=0.4, npop
         dof = len(bounds)
 
     nr = int(npop * pp)  # number of reproduction
-    nm = int(npop * pm)  # number of mutation children
+    # nm = int(npop * pm)  # number of mutation children
     spacer = len(str(npop))  # for logging only
 
     # initialize population
@@ -146,37 +146,37 @@ def minimize(func, x0=None, dof=None, bounds=None, pp=0.6, cr=0.44, pm=0.4, npop
 
     # main loop
     hist = []
-    total_pop = []
-    total_pp = []
-    total_pm = []
+    total_pop = []  # Contador de pop
+    total_pp = []   # Contador de pp
+    total_pm = []   # Contador de pm
     cont = 0
 
     for epoch in range(0, maxiter):
 
         # initialize epoch
-        # New: Población dinámica
         largo_pop = len(pop)
         pop = sorted(pop, key=lambda x: func(x), reverse=False)
-        if (dynamic):
-            var1 = int(npop * rmax)
-            var2 = int(npop * rmin)
-            var3 = int(pow(npop, 2))
-            nr = int(largo_pop * pp)
-            if largo_pop > var1 and cont == 0:
-                # Disminuir la población
-                cr = 1 - cr
-                pm = 1 - pm
-                pp = 1 - pp
-                cont = 1
-            elif largo_pop < var2 and cont == 1:
-                # Aumentar la población
-                cr = 1 - cr
-                pm = 1 - pm
-                pp = 1 - pp
-                cont = 0
-            if largo_pop > var3:
-                pop = pop[:npop]
-                nr = len(pop)
+
+        # New: Población dinámica
+        var1 = int(npop * rmax)
+        var2 = int(npop * rmin)
+        var3 = int(pow(npop, 2))
+        nr = int(largo_pop * pp)
+        if largo_pop > var1 and cont == 0:
+            # Disminuir la población
+            cr = 1 - cr
+            pm = 1 - pm
+            pp = 1 - pp
+            cont = 1
+        elif largo_pop < var2 and cont == 1:
+            # Aumentar la población
+            cr = 1 - cr
+            pm = 1 - pm
+            pp = 1 - pp
+            cont = 0
+        if largo_pop > var3:
+            pop = pop[:npop]
+            nr = len(pop)
         # End Población Dinámica
 
         pop1 = deepcopy(pop[:nr])
@@ -246,7 +246,7 @@ def minimize(func, x0=None, dof=None, bounds=None, pp=0.6, cr=0.44, pm=0.4, npop
             cp1, cp2 = randint(0, dof - 1), randint(0, dof - 1)
 
             # New: Validar que los índices sean diferentes
-            while cp1 == cp2:
+            while cp1 == cp2 and dof > 1:
                 cp1, cp2 = randint(0, dof - 1), randint(0, dof - 1)
 
             # swap chromosomes
@@ -278,8 +278,7 @@ def experimentos(n=31, npop=10, maxiter=30, rmax=2, rmin=0.8, dof=5, pp=0.6, pm=
         start = datetime.now()
 
         fbest, xbest, hist, tpop, tpp, tpm = minimize(sphere, dof=dof, maxiter=maxiter, pp=pp, pm=pm, cr=cr, npop=npop,
-                                                      rmax=rmax,
-                                                      rmin=rmin, dynamic=True)
+                                                      rmax=rmax, rmin=rmin)
         experimentos.append(fbest)
 
         end = datetime.now()
@@ -304,7 +303,7 @@ if __name__ == "__main__":
 
     n = 10
     npop = 100
-    maxiter = 5
+    maxiter = 500
     rmax = 3
     rmin = 1
     dof = 2
